@@ -9,6 +9,9 @@ function App() {
       primary: {
         main: '#900000'
       },
+      secondary: {
+        main: "#099262"
+      },
     }
   });
   return (

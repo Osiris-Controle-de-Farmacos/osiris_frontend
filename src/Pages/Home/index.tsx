@@ -4,7 +4,7 @@ import { Box, Button, TextField, Typography, Grid } from '@material-ui/core';
 function Home() {
   return (
     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" marginTop="40px">
-      <Box width="25%">
+      <Box width="480px">
         <Box display="flex" justifyContent="center" marginBottom="40px">
           <Typography variant="h5" component="h1">
             Bem vindo general tamo junto

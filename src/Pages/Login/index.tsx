@@ -4,7 +4,7 @@ import React from 'react';
 function Login() {
   return (
     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" marginTop="40px">
-      <Box width="20%">
+      <Box width="420px">
         <Box marginBottom="20px">
           <TextField
             id="outlined-password-input"
