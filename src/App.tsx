@@ -9,7 +9,7 @@ function App() {
       primary: {
         main: '#900000'
       },
-    },
+    }
   });
   return (
     <ThemeProvider theme={theme}>
