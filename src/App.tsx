@@ -1,8 +1,7 @@
 import React from 'react';
 import Layout from './Pages/Layout';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
-import red from '@material-ui/core/colors/red';
-
+import CssBaseline from '@material-ui/core/CssBaseline';
 function App() {
   const theme = createMuiTheme({
     palette: {
@@ -10,12 +9,13 @@ function App() {
         main: '#900000'
       },
       secondary: {
-        main: "#099262"
+        main: "#11871D"
       },
     }
   });
   return (
     <ThemeProvider theme={theme}>
+			<CssBaseline/>
       <Layout />
     </ThemeProvider>
   );

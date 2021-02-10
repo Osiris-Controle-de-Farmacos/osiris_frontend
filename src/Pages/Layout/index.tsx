@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Home from '../Home';
 import Login from '../Login';
 import Medicines from '../Medicines';
+import CreatePrescription from '../Prescription/create';
 import { BrowserRouter as Router, Switch, Route, Link, useLocation } from 'react-router-dom';
 function Layout() {
 
@@ -22,12 +23,15 @@ function Layout() {
         <Route path="/" exact>
           <Home />
         </Route>
-        <Route path="/login" exact>
+        <Route path="/login">
           <Login />
         </Route>
-        <Route path="/medicines" exact>
+        <Route path="/medicines">
           <Medicines />
         </Route>
+				<Route path="/prescription/create">
+					<CreatePrescription/>
+				</Route>
       </Switch>
     </Router>
   </>

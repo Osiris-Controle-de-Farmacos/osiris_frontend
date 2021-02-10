@@ -1,11 +1,9 @@
 import React from 'react';
-import { Alert, Autocomplete } from '@material-ui/lab';
+import { Autocomplete } from '@material-ui/lab';
 import {
   TextField,
   Button,
   Grid,
-  Hidden,
-  IconButton,
   Container,
   Box,
   Paper,
@@ -14,12 +12,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
-  Chip,
-  Snackbar
 } from '@material-ui/core';
-import { DataGrid, ColDef, ValueGetterParams } from '@material-ui/data-grid';
 import { Search, Add } from '@material-ui/icons';
 
 interface Data {
