@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 import {
 	Container,
 	Box,
@@ -13,8 +14,28 @@ import {
 	Button,
 } from "@material-ui/core";
 import { Autocomplete } from "@material-ui/lab";
-import { Search, Add, Delete } from "@material-ui/icons";
+import { Delete } from "@material-ui/icons";
+import DosageModal from "./components/DosageModal";
+import { Modal, Fade, Backdrop } from "@material-ui/core";
+import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
+const useStyles = makeStyles((theme: Theme) =>
+	createStyles({
+		modal: {
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		paper: {
+			backgroundColor: theme.palette.background.paper,
+			border: "2px solid #000",
+			boxShadow: theme.shadows[5],
+			padding: theme.spacing(2, 4, 3),
+		},
+	})
+);
 function CreatePrescription() {
+	const [open, setOpen] = useState(false);
+	const classes = useStyles();
 	interface Data {
 		id: number;
 		medicine: string;
@@ -22,7 +43,9 @@ function CreatePrescription() {
 		dosage: string;
 	}
 	const autocompleteop = ["Dipirona", "Chá de pea"];
-
+	const handleClose = () => {
+		setOpen(false);
+	};
 	const rows: Data[] = [
 		{ id: 0, medicine: "Dipirona", amount: 301, dosage: "40mg 1 vez de manhã" },
 		{
@@ -90,6 +113,9 @@ function CreatePrescription() {
 								id="free-solo-2-demo"
 								disableClearable
 								options={autocompleteop.map((option) => option)}
+								onChange={() => {
+									setOpen(true);
+								}}
 								renderInput={(params) => (
 									<TextField
 										{...params}
@@ -97,7 +123,10 @@ function CreatePrescription() {
 										margin="normal"
 										variant="outlined"
 										size="small"
-										InputProps={{ ...params.InputProps, type: "search" }}
+										InputProps={{
+											...params.InputProps,
+											type: "search",
+										}}
 									/>
 								)}
 							/>
@@ -179,6 +208,22 @@ function CreatePrescription() {
 					</Grid>
 				</Box>
 			</Paper>
+			<Modal
+				aria-labelledby="transition-modal-title"
+				aria-describedby="transition-modal-description"
+				open={open}
+				onClose={handleClose}
+				className={classes.modal}
+				closeAfterTransition
+				BackdropComponent={Backdrop}
+				BackdropProps={{
+					timeout: 500,
+				}}
+			>
+				<Fade in={open}>
+					<DosageModal medicine={"ASPIRINA"} amount={202} />
+				</Fade>
+			</Modal>
 		</Container>
 	);
 }
