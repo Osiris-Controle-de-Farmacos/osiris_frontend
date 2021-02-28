@@ -1,5 +1,5 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import {
 	Container,
 	Box,
@@ -12,12 +12,16 @@ import {
 	Table,
 	TableBody,
 	Button,
+	IconButton,
 } from "@material-ui/core";
+
 import { Autocomplete } from "@material-ui/lab";
 import { Delete } from "@material-ui/icons";
 import DosageModal from "./components/DosageModal";
 import { Modal, Fade, Backdrop } from "@material-ui/core";
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
+import api from "../../services/api";
+
 const useStyles = makeStyles((theme: Theme) =>
 	createStyles({
 		modal: {
@@ -33,34 +37,78 @@ const useStyles = makeStyles((theme: Theme) =>
 		},
 	})
 );
+
+interface Medicine {
+	id: number;
+	name: string;
+	amount: number;
+	dosage: string;
+}
+
 function CreatePrescription() {
-	const [open, setOpen] = useState(false);
+	const history = useHistory();
 	const classes = useStyles();
-	interface Data {
-		id: number;
-		medicine: string;
-		amount: number;
-		dosage: string;
-	}
-	const autocompleteop = ["Dipirona", "Chá de pea"];
-	const handleClose = () => {
+
+	const [open, setOpen] = useState(false);
+	const [pacient, setPacient] = useState("");
+	const [date, setDate] = useState(() => {
+		const currentDate = new Date();
+		const parsedDate = `${currentDate.getFullYear()}-${String(
+			currentDate.getMonth()
+		).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`;
+		return parsedDate;
+	});
+
+	const [medicines, setMedicines] = useState({
+		list: Array<Medicine>(),
+	});
+
+	const [allMedicines, setAllMedicines] = useState({
+		list: Array<Medicine>(),
+	});
+
+	const [autocompleteMedicine, setAutocompleteMedicine] = useState(
+		{} as Medicine
+	);
+
+	function handleClose() {
 		setOpen(false);
-	};
-	const rows: Data[] = [
-		{ id: 0, medicine: "Dipirona", amount: 301, dosage: "40mg 1 vez de manhã" },
-		{
-			id: 1,
-			medicine: "Paracetamol",
-			amount: 200,
-			dosage: "40mg 1 vez de manhã",
-		},
-		{
-			id: 1,
-			medicine: "Propanolol",
-			amount: 100,
-			dosage: "40mg 1 vez de manhã",
-		},
-	];
+	}
+
+	function openDosageModal(medicine: Medicine) {
+		setAutocompleteMedicine(medicine);
+		setOpen(true);
+	}
+
+	function removeMedicine(id: number) {
+		setMedicines({
+			list: medicines.list.filter((medicine) => medicine.id != id),
+		});
+	}
+
+	function createMedicine() {
+		const body = {
+			prescription: {
+				date: date,
+				pacient: pacient,
+				status: 0,
+				idDoctor: 2,
+			},
+			medicines: medicines.list,
+		};
+		api.post("/prescription", body).then((response) => {
+			history.push(`/prescription/show/${response.data.id}`);
+		});
+	}
+
+	useEffect(() => {
+		api.get("medicines").then((response) => {
+			setAllMedicines({
+				list: response.data,
+			});
+		});
+	}, []);
+
 	return (
 		<Container maxWidth="lg">
 			<Paper>
@@ -72,12 +120,13 @@ function CreatePrescription() {
 									<TextField
 										id="date"
 										label="Data"
+										defaultValue={date}
 										style={{ margin: 8 }}
 										type="date"
-										defaultValue="2021-01-01"
 										InputLabelProps={{
 											shrink: true,
 										}}
+										onChange={(e) => setDate(e.currentTarget.value)}
 									/>
 								</Box>
 								<Box flexGrow={1}>
@@ -90,6 +139,7 @@ function CreatePrescription() {
 										InputLabelProps={{
 											shrink: true,
 										}}
+										onChange={(e) => setPacient(e.currentTarget.value)}
 									/>
 								</Box>
 							</Box>
@@ -111,10 +161,11 @@ function CreatePrescription() {
 							<Autocomplete
 								freeSolo
 								id="free-solo-2-demo"
-								disableClearable
-								options={autocompleteop.map((option) => option)}
-								onChange={() => {
-									setOpen(true);
+								value={autocompleteMedicine}
+								options={allMedicines.list}
+								getOptionLabel={(option) => option.name}
+								onChange={(e, value) => {
+									openDosageModal(value as Medicine);
 								}}
 								renderInput={(params) => (
 									<TextField
@@ -134,7 +185,7 @@ function CreatePrescription() {
 							<TableContainer>
 								<Table stickyHeader aria-label="sticky table">
 									<TableBody>
-										{rows.map((row) => {
+										{medicines.list.map((row) => {
 											return (
 												<TableRow
 													hover
@@ -142,49 +193,63 @@ function CreatePrescription() {
 													tabIndex={-1}
 													key={row.id}
 												>
-													<TableCell align="center">{row.medicine}</TableCell>
-													<TableCell>{row.dosage}</TableCell>
+													<TableCell align="center">{row.name}</TableCell>
+													<TableCell align="center">{row.dosage}</TableCell>
 													<TableCell align="center">
-														{row.amount > 300 ? (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#11871D",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														) : row.amount > 100 ? (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#FF9F1C",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														) : (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#BB0000",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														)}
+														<Box
+															display="flex"
+															alignItems="center"
+															justifyContent="center"
+														>
+															{row.amount > 300 ? (
+																<Box
+																	display="block"
+																	minWidth="180px"
+																	component="span"
+																	p={1}
+																	borderRadius="2px"
+																	style={{
+																		backgroundColor: "#11871D",
+																		color: "white",
+																	}}
+																>
+																	{row.amount} unidades disponíveis
+																</Box>
+															) : row.amount > 100 ? (
+																<Box
+																	display="block"
+																	minWidth="180px"
+																	component="span"
+																	p={1}
+																	borderRadius="2px"
+																	style={{
+																		backgroundColor: "#FF9F1C",
+																		color: "white",
+																	}}
+																>
+																	{row.amount} unidades disponíveis
+																</Box>
+															) : (
+																<Box
+																	display="block"
+																	minWidth="180px"
+																	component="span"
+																	p={1}
+																	borderRadius="2px"
+																	style={{
+																		backgroundColor: "#BB0000",
+																		color: "white",
+																	}}
+																>
+																	{row.amount} unidades disponíveis
+																</Box>
+															)}
+														</Box>
 													</TableCell>
 													<TableCell align="center">
-														<Delete />
+														<IconButton>
+															<Delete onClick={() => removeMedicine(row.id)} />
+														</IconButton>
 													</TableCell>
 												</TableRow>
 											);
@@ -200,6 +265,7 @@ function CreatePrescription() {
 									color="primary"
 									fullWidth
 									size="large"
+									onClick={createMedicine}
 								>
 									Criar receita
 								</Button>
@@ -221,7 +287,12 @@ function CreatePrescription() {
 				}}
 			>
 				<Fade in={open}>
-					<DosageModal medicine={"ASPIRINA"} amount={202} />
+					<DosageModal
+						medicine={autocompleteMedicine}
+						medicines={medicines}
+						setMedicines={setMedicines}
+						setOpen={setOpen}
+					/>
 				</Fade>
 			</Modal>
 		</Container>

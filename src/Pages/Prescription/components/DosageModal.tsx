@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
 	Paper,
 	Box,
@@ -7,11 +7,34 @@ import {
 	TextField,
 	Button,
 } from "@material-ui/core";
-interface DosageModalProps {
-	medicine: string;
+
+interface Medicine {
+	id: number;
+	name: string;
 	amount: number;
+	dosage: string;
 }
-const DosageModal: React.FC<DosageModalProps> = ({ medicine, amount }) => {
+
+interface DosageModalProps {
+	medicine: Medicine;
+	medicines: { list: Array<Medicine> };
+	setMedicines: (value: { list: Array<Medicine> }) => void;
+	setOpen: (value: boolean) => void;
+}
+
+function DosageModal({
+	medicine,
+	medicines,
+	setMedicines,
+	setOpen,
+}: DosageModalProps) {
+	const [dosage, setDosage] = useState("");
+	function addMedicine() {
+		setMedicines({
+			list: medicines.list.concat({ ...medicine, dosage: dosage }),
+		});
+		setOpen(false);
+	}
 	return (
 		<Paper>
 			<Box
@@ -23,12 +46,12 @@ const DosageModal: React.FC<DosageModalProps> = ({ medicine, amount }) => {
 				alignItems="center"
 			>
 				<Typography variant="h6" gutterBottom>
-					{medicine}
+					{medicine.name}
 				</Typography>
 				<Box mb={2} width="200px">
 					<Divider style={{ height: "2px" }} />
 				</Box>
-				{amount > 300 ? (
+				{medicine.amount > 300 ? (
 					<Box
 						component="span"
 						p={1}
@@ -38,9 +61,9 @@ const DosageModal: React.FC<DosageModalProps> = ({ medicine, amount }) => {
 							color: "white",
 						}}
 					>
-						{amount} unidades disponíveis
+						{medicine.amount} unidades disponíveis
 					</Box>
-				) : amount > 100 ? (
+				) : medicine.amount > 100 ? (
 					<Box
 						component="span"
 						p={1}
@@ -50,7 +73,7 @@ const DosageModal: React.FC<DosageModalProps> = ({ medicine, amount }) => {
 							color: "white",
 						}}
 					>
-						{amount} unidades disponíveis
+						{medicine.amount} unidades disponíveis
 					</Box>
 				) : (
 					<Box
@@ -62,7 +85,7 @@ const DosageModal: React.FC<DosageModalProps> = ({ medicine, amount }) => {
 							color: "white",
 						}}
 					>
-						{amount} unidades disponíveis
+						{medicine.amount} unidades disponíveis
 					</Box>
 				)}
 				<Box my={2} width="100%">
@@ -73,18 +96,20 @@ const DosageModal: React.FC<DosageModalProps> = ({ medicine, amount }) => {
 						rows={4}
 						variant="outlined"
 						fullWidth
+						onChange={(e) => setDosage(e.currentTarget.value)}
 					/>
 				</Box>
 				<Button
 					variant="contained"
 					color="primary"
 					style={{ backgroundColor: "#130F73" }}
+					onClick={addMedicine}
 				>
 					Adicionar a receita
 				</Button>
 			</Box>
 		</Paper>
 	);
-};
+}
 
 export default DosageModal;

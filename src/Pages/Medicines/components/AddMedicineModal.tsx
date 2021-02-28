@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
 	Paper,
 	Box,
@@ -7,8 +7,35 @@ import {
 	TextField,
 	Divider,
 } from "@material-ui/core";
+import api from "../../../services/api";
 
-function AddMedicineModal() {
+interface AddMedicineModalProps {
+	setOpen: (value: boolean) => void;
+	loadMedicines: () => void;
+	setAlertOpen: (value: boolean) => void;
+	setAlertMessage: (value: string) => void;
+}
+
+function AddMedicineModal(props: AddMedicineModalProps) {
+	const [name, setName] = useState("");
+	const [amount, setAmount] = useState(0);
+	const [description, setDescription] = useState("");
+
+	function createMedication() {
+		props.setOpen(false);
+		api
+			.post("/medicine", {
+				name: name,
+				description: description,
+				initialAmount: amount,
+			})
+			.then(() => {
+				props.loadMedicines();
+				props.setAlertMessage("Medicamento adicionado");
+				props.setAlertOpen(true);
+			});
+	}
+
 	return (
 		<Paper>
 			<Box
@@ -31,6 +58,7 @@ function AddMedicineModal() {
 					margin="normal"
 					variant="outlined"
 					size="small"
+					onChange={(e) => setName(e.currentTarget.value)}
 				/>
 				<Box my={1} width="100%">
 					<TextField
@@ -43,6 +71,7 @@ function AddMedicineModal() {
 						InputLabelProps={{
 							shrink: true,
 						}}
+						onChange={(e) => setAmount(parseInt(e.currentTarget.value))}
 					/>
 				</Box>
 				<Box mb={1} width="100%">
@@ -53,9 +82,10 @@ function AddMedicineModal() {
 						rows={4}
 						variant="outlined"
 						fullWidth
+						onChange={(e) => setDescription(e.currentTarget.value)}
 					/>
 				</Box>
-				<Button variant="contained" color="primary">
+				<Button variant="contained" color="primary" onClick={createMedication}>
 					Adicionar medicação
 				</Button>
 			</Box>

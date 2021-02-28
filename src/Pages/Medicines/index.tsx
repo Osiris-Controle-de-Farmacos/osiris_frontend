@@ -17,14 +17,15 @@ import {
 	Backdrop,
 	IconButton,
 	CircularProgress,
+	Snackbar,
 } from "@material-ui/core";
 
 import { Search, Add } from "@material-ui/icons";
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
+import MuiAlert, { AlertProps } from "@material-ui/lab/Alert";
 import MedicineModal from "./components/MedicineModal";
 import AddMedicineModal from "./components/AddMedicineModal";
 import api from "../../services/api";
-
 const useStyles = makeStyles((theme: Theme) =>
 	createStyles({
 		modal: {
@@ -48,11 +49,17 @@ interface Medicine {
 	amount: number;
 }
 
+function Alert(props: AlertProps) {
+	return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
 function Medicines() {
 	const [open, setOpen] = useState(false);
+	const [alertOpen, setAlertOpen] = useState(false);
 	const [modalId, setModalId] = useState(0);
 	const [openMedicine, setOpenMedicine] = useState(false);
 	const [searchText, setSearchText] = useState("");
+	const [alertMessage, setAlertMessage] = useState("");
 	const [medicines, setMedicines] = useState({
 		list: Array<Medicine>(),
 	});
@@ -60,18 +67,31 @@ function Medicines() {
 	const handleClose = () => setOpen(false);
 	const addMedicine = () => setOpenMedicine(true);
 	const handleCloseMedicineModal = () => setOpenMedicine(false);
+
 	useEffect(() => {
+		loadMedicines();
+	}, []);
+
+	function loadMedicines() {
 		api.get("medicines").then((response) => {
 			setMedicines({
 				list: response.data,
 			});
 		});
-	}, []);
+	}
+
 	function openMedicineModal(id: number) {
 		setOpen(true);
 		setModalId(id);
-		console.log(id);
 	}
+
+	const handleAlertClose = (event?: React.SyntheticEvent, reason?: string) => {
+		if (reason === "clickaway") {
+			return;
+		}
+
+		setAlertOpen(false);
+	};
 	return (
 		<Container maxWidth="lg">
 			<Grid
@@ -130,7 +150,11 @@ function Medicines() {
 								</TableHead>
 								<TableBody>
 									{medicines.list
-										.filter((medicine) => medicine.name.includes(searchText))
+										.filter((medicine) =>
+											medicine.name
+												.toLowerCase()
+												.includes(searchText.toLowerCase())
+										)
 										.map((row) => {
 											return (
 												<TableRow
@@ -141,49 +165,61 @@ function Medicines() {
 												>
 													<TableCell align="center">{row.name}</TableCell>
 													<TableCell align="center">
-														{row.amount > 300 ? (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#11871D",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														) : row.amount > 100 ? (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#FF9F1C",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														) : (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#BB0000",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														)}
+														<Box
+															display="flex"
+															alignItems="center"
+															justifyContent="center"
+														>
+															{row.amount > 300 ? (
+																<Box
+																	display="block"
+																	minWidth="180px"
+																	component="span"
+																	p={1}
+																	borderRadius="2px"
+																	style={{
+																		backgroundColor: "#11871D",
+																		color: "white",
+																	}}
+																>
+																	{row.amount} unidades disponíveis
+																</Box>
+															) : row.amount > 100 ? (
+																<Box
+																	display="block"
+																	minWidth="180px"
+																	component="span"
+																	p={1}
+																	borderRadius="2px"
+																	style={{
+																		backgroundColor: "#FF9F1C",
+																		color: "white",
+																	}}
+																>
+																	{row.amount} unidades disponíveis
+																</Box>
+															) : (
+																<Box
+																	display="block"
+																	minWidth="180px"
+																	component="span"
+																	p={1}
+																	borderRadius="2px"
+																	style={{
+																		backgroundColor: "#BB0000",
+																		color: "white",
+																	}}
+																>
+																	{row.amount} unidades disponíveis
+																</Box>
+															)}
+														</Box>
 													</TableCell>
 													<TableCell align="center">
-														<IconButton>
-															<Search
-																onClick={() => openMedicineModal(row.id)}
-															/>
+														<IconButton
+															onClick={() => openMedicineModal(row.id)}
+														>
+															<Search />
 														</IconButton>
 													</TableCell>
 												</TableRow>
@@ -208,7 +244,13 @@ function Medicines() {
 				}}
 			>
 				<Fade in={open}>
-					<MedicineModal id={modalId} />
+					<MedicineModal
+						id={modalId}
+						setOpen={setOpen}
+						loadMedicines={loadMedicines}
+						setAlertOpen={setAlertOpen}
+						setAlertMessage={setAlertMessage}
+					/>
 				</Fade>
 			</Modal>
 			<Modal
@@ -224,9 +266,23 @@ function Medicines() {
 				}}
 			>
 				<Fade in={openMedicine}>
-					<AddMedicineModal />
+					<AddMedicineModal
+						setOpen={setOpenMedicine}
+						loadMedicines={loadMedicines}
+						setAlertOpen={setAlertOpen}
+						setAlertMessage={setAlertMessage}
+					/>
 				</Fade>
 			</Modal>
+			<Snackbar
+				open={alertOpen}
+				autoHideDuration={6000}
+				onClose={handleAlertClose}
+			>
+				<Alert onClose={handleAlertClose} severity="success">
+					{alertMessage}
+				</Alert>
+			</Snackbar>
 		</Container>
 	);
 }

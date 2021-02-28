@@ -12,6 +12,12 @@ function App() {
 				main: "#11871D",
 			},
 		},
+		typography: {
+			fontFamily: "Opens Sans, sans-serif",
+			h3: {
+				fontFamily: "Dosis, sans-serif",
+			},
+		},
 	});
 	return (
 		<ThemeProvider theme={theme}>

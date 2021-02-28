@@ -1,11 +1,10 @@
-import React from "react";
-import { Autocomplete } from "@material-ui/lab";
+import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import {
 	TextField,
 	Button,
 	Grid,
 	Container,
-	Box,
 	Paper,
 	Table,
 	TableBody,
@@ -13,43 +12,86 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	Box,
+	CircularProgress,
+	IconButton,
 } from "@material-ui/core";
 import { Search, Add } from "@material-ui/icons";
+import api from "../../services/api";
 
-interface Data {
+interface Prescription {
 	id: number;
 	date: string;
 	pacient: string;
-	medicines: Array<string>;
 	status: number;
+	name: string;
+	medicines: Array<Medicine>;
+	formatedDate?: string;
 }
-const autocompleteop = ["Dipirona", "Chá de pea"];
 
-const rows: Data[] = [
-	{
-		id: 0,
-		date: "2020-02-03",
-		pacient: "Joao da 12",
-		medicines: ["Parecetamal 40mg de manha"],
-		status: 1,
-	},
-	{
-		id: 1,
-		date: "2020-02-03",
-		pacient: "DJ AZEITONA",
-		medicines: ["Parecetamal 40mg de manha"],
-		status: 1,
-	},
-	{
-		id: 2,
-		date: "2020-02-03",
-		pacient: "MC POZE DO RODOO",
-		medicines: ["Pitbuflol 20mg de noite"],
-		status: 1,
-	},
-];
+interface Medicine {
+	id: number;
+	name: string;
+	description: string;
+	dosage: string;
+}
 
-function Medicines() {
+function Prescriptions() {
+	const history = useHistory();
+	const [prescriptions, setPrescriptions] = useState({
+		list: Array<Prescription>(),
+	});
+	const [searchText, setSearchText] = useState("");
+
+	function openPrescription(id: number) {
+		history.push(`prescription/show/${id}`);
+	}
+
+	function createNewPrescription() {
+		history.push("prescription/create");
+	}
+
+	function filterPrescriptions(
+		prescriptions: Array<Prescription>,
+		searchText: string
+	) {
+		searchText = searchText.toLowerCase();
+		return prescriptions.filter((prescription) => {
+			let medicines = "";
+			for (const medicine of prescription.medicines) {
+				medicines += medicine.name.toLocaleLowerCase();
+			}
+
+			return (
+				medicines.includes(searchText) ||
+				String(prescription.id).includes(searchText) ||
+				prescription.formatedDate?.includes(searchText) ||
+				prescription.name.toLowerCase().includes(searchText) ||
+				prescription.pacient.toLowerCase().includes(searchText)
+			);
+		});
+	}
+
+	useEffect(() => {
+		api.get("prescriptions").then((response) => {
+			response.data.forEach((prescription: Prescription) => {
+				const date = new Date(prescription.date);
+				const ddmmyyyyDate = `${String(date.getDate()).padStart(
+					2,
+					"0"
+				)}/${String(date.getMonth() + 1).padStart(
+					2,
+					"0"
+				)}/${date.getFullYear()}`;
+				prescription.formatedDate = ddmmyyyyDate;
+			});
+
+			setPrescriptions({
+				list: response.data,
+			});
+		});
+	}, []);
+
 	return (
 		<Container maxWidth="lg">
 			<Grid
@@ -60,35 +102,16 @@ function Medicines() {
 				alignContent="center"
 				spacing={1}
 			>
-				<Grid item xs={12} md={7}>
-					<Autocomplete
-						freeSolo
-						id="free-solo-2-demo"
-						disableClearable
-						options={autocompleteop.map((option) => option)}
-						renderInput={(params) => (
-							<TextField
-								{...params}
-								label="Pesquise por uma receita"
-								margin="normal"
-								variant="outlined"
-								size="small"
-								InputProps={{ ...params.InputProps, type: "search" }}
-							/>
-						)}
-					/>
-				</Grid>
-
-				<Grid item xs={12} md={2}>
-					<Button
-						variant="contained"
-						color="primary"
-						size="medium"
-						endIcon={<Search />}
+				<Grid item xs={12} md={9}>
+					<TextField
+						label="Pesquisar receita"
+						placeholder="Pesquise pelo código, data, nome do paciente, nome do médico ou medicamentos"
 						fullWidth
-					>
-						Pesquisar
-					</Button>
+						margin="normal"
+						variant="outlined"
+						size="small"
+						onChange={(e) => setSearchText(e.currentTarget.value)}
+					/>
 				</Grid>
 
 				<Grid xs={12} md={3} item>
@@ -97,64 +120,132 @@ function Medicines() {
 						color="secondary"
 						size="medium"
 						endIcon={<Add />}
+						onClick={createNewPrescription}
 						fullWidth
 					>
 						Nova receita
 					</Button>
 				</Grid>
 			</Grid>
-			<Paper>
-				<TableContainer>
-					<Table stickyHeader aria-label="sticky table">
-						<TableHead>
-							<TableRow>
-								<TableCell align="center">
-									<b>Data</b>
-								</TableCell>
-								<TableCell align="center">
-									<b>Paciente</b>
-								</TableCell>
-								<TableCell align="center">
-									<b>Medicamentos</b>
-								</TableCell>
-								<TableCell align="center">
-									<b>Status</b>
-								</TableCell>
-								<TableCell align="center">
-									<b>Visualizar</b>
-								</TableCell>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{rows.map((row) => {
-								return (
-									<TableRow hover role="checkbox" tabIndex={-1} key={row.id}>
-										<TableCell align="center">{row.date}</TableCell>
-										<TableCell align="center">{row.pacient}</TableCell>
-										<TableCell align="center">
-											{row.medicines.map((medicine) => {
-												return <>{medicine}</>;
-											})}
-										</TableCell>
-										<TableCell align="center">
-											{row.status === 1
-												? "Status 01"
-												: row.status === 2
-												? "Status 02"
-												: "Status 03"}
-										</TableCell>
-										<TableCell align="center">
-											<Search />
-										</TableCell>
-									</TableRow>
-								);
-							})}
-						</TableBody>
-					</Table>
-				</TableContainer>
-			</Paper>
+			{prescriptions.list.length === 0 ? (
+				<Box display="flex" justifyContent="center">
+					<CircularProgress />
+				</Box>
+			) : (
+				<Paper>
+					<TableContainer>
+						<Table stickyHeader aria-label="sticky table">
+							<TableHead>
+								<TableRow>
+									<TableCell align="center">
+										<b>Código</b>
+									</TableCell>
+									<TableCell align="center">
+										<b>Data</b>
+									</TableCell>
+									<TableCell align="center">
+										<b>Médico</b>
+									</TableCell>
+									<TableCell align="center">
+										<b>Paciente</b>
+									</TableCell>
+									<TableCell align="center">
+										<b>Medicamentos</b>
+									</TableCell>
+									<TableCell align="center">
+										<b>Status</b>
+									</TableCell>
+									<TableCell align="center">
+										<b>Visualizar</b>
+									</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{filterPrescriptions(prescriptions.list, searchText).map(
+									(prescription) => {
+										return (
+											<TableRow
+												hover
+												role="checkbox"
+												tabIndex={-1}
+												key={prescription.id}
+											>
+												<TableCell align="center">{prescription.id}</TableCell>
+												<TableCell align="center">
+													{prescription.formatedDate}
+												</TableCell>
+												<TableCell align="center">
+													{prescription.name}
+												</TableCell>
+												<TableCell align="center">
+													{prescription.pacient}
+												</TableCell>
+												<TableCell align="center">
+													{prescription.medicines.map((medicine) => {
+														return (
+															<p>
+																{medicine.name}, {medicine.dosage}
+															</p>
+														);
+													})}
+												</TableCell>
+												<TableCell align="center">
+													<Box
+														display="flex"
+														alignItems="center"
+														justifyContent="center"
+													>
+														{prescription.status === 0 ? (
+															<Box
+																display="block"
+																minWidth="180px"
+																component="span"
+																p={1}
+																borderRadius="2px"
+																style={{
+																	backgroundColor: "#FF9F1C",
+																	color: "white",
+																}}
+															>
+																Aguardando retirada
+															</Box>
+														) : prescription.status === 1 ? (
+															<Box
+																display="block"
+																minWidth="180px"
+																component="span"
+																p={1}
+																borderRadius="2px"
+																style={{
+																	backgroundColor: "#11871D",
+																	color: "white",
+																}}
+															>
+																Finalizada
+															</Box>
+														) : (
+															""
+														)}
+													</Box>
+												</TableCell>
+												<TableCell align="center">
+													<IconButton
+														onClick={() => openPrescription(prescription.id)}
+													>
+														<Search />
+													</IconButton>
+												</TableCell>
+											</TableRow>
+										);
+									}
+								)}
+							</TableBody>
+						</Table>
+					</TableContainer>
+				</Paper>
+			)}
 		</Container>
 	);
 }
 
-export default Medicines;
+export default Prescriptions;

@@ -43,7 +43,7 @@ function Layout() {
 					<Route path="/prescription/create">
 						<CreatePrescription />
 					</Route>
-					<Route path="/prescription/show">
+					<Route path="/prescription/show/:id">
 						<ShowPrescription />
 					</Route>
 				</Switch>

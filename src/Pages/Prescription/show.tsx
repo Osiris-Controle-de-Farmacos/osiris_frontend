@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
 	Container,
 	Box,
@@ -6,43 +6,135 @@ import {
 	Grid,
 	TextField,
 	TableContainer,
-	TableRow,
-	TableCell,
 	Table,
 	TableBody,
+	TableCell,
+	TableRow,
 	Button,
+	CircularProgress,
+	Typography,
+	Snackbar,
 } from "@material-ui/core";
-import { Autocomplete } from "@material-ui/lab";
-import { Search, Add, Delete } from "@material-ui/icons";
-function CreatePrescription() {
-	interface Data {
-		id: number;
-		medicine: string;
-		amount: number;
-		dosage: string;
-	}
-	const autocompleteop = ["Dipirona", "Chá de pea"];
 
-	const rows: Data[] = [
-		{ id: 0, medicine: "Dipirona", amount: 301, dosage: "40mg 1 vez de manhã" },
-		{
-			id: 1,
-			medicine: "Paracetamol",
-			amount: 200,
-			dosage: "40mg 1 vez de manhã",
-		},
-		{
-			id: 1,
-			medicine: "Propanolol",
-			amount: 100,
-			dosage: "40mg 1 vez de manhã",
-		},
-	];
+import MuiAlert, { AlertProps } from "@material-ui/lab/Alert";
+import { useParams } from "react-router-dom";
+import { Print } from "@material-ui/icons";
+import api from "../../services/api";
+import ReactToPrint from "react-to-print";
+import Logo from "../../Pages/Layout/assets/images/osiris.png";
+interface Prescription {
+	id: number;
+	date: string;
+	pacient: string;
+	status: number;
+	name: string;
+	medicines: Array<Medicine>;
+	formatedDate?: string;
+}
+
+interface Medicine {
+	id: number;
+	name: string;
+	description: string;
+	amount: number;
+	dosage: string;
+}
+
+interface PrescriptionParams {
+	id: string;
+}
+
+function Alert(props: AlertProps) {
+	return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
+function ShowPrescription() {
+	const [alertOpen, setAlertOpen] = useState(false);
+	const [prescription, setPrescription] = useState({
+		medicines: Array<Medicine>(),
+	} as Prescription);
+
+	let { id } = useParams<PrescriptionParams>();
+	const printRef = useRef<HTMLDivElement>(null);
+
+	function finalizePriscription() {
+		api.put(`prescription`, { id: id, status: 1 }).then(() => {
+			setAlertOpen(true);
+			setPrescription({ ...prescription, status: 1 });
+		});
+	}
+
+	const handleAlertClose = (event?: React.SyntheticEvent, reason?: string) => {
+		if (reason === "clickaway") {
+			return;
+		}
+
+		setAlertOpen(false);
+	};
+
+	useEffect(() => {
+		api.get(`prescription/${id}`).then((response) => {
+			const date = new Date(response.data.date);
+			const ddmmyyyyDate = `${String(date.getDate()).padStart(2, "0")}/${String(
+				date.getMonth() + 1
+			).padStart(2, "0")}/${date.getFullYear()}`;
+			response.data.formatedDate = ddmmyyyyDate;
+			setPrescription(response.data);
+		});
+	}, []);
+
 	return (
 		<Container maxWidth="lg">
-			<Paper>
-				<Box mt="20px" p="20px">
-					<Grid>
+			{prescription.pacient === undefined ? (
+				<Box display="flex" justifyContent="center" mt="10px">
+					<CircularProgress />
+				</Box>
+			) : (
+				<Paper ref={printRef}>
+					<Box mt="20px" p="20px">
+						<Grid>
+							<Grid item>
+								<Box display="flex" justifyContent="right" displayPrint="none">
+									<Box mr="4px">
+										<Button
+											variant="contained"
+											color="primary"
+											size="medium"
+											onClick={finalizePriscription}
+											disabled={prescription.status === 1}
+										>
+											Finalizar Receita
+										</Button>
+									</Box>
+									<ReactToPrint
+										trigger={() => (
+											<Button variant="contained" color="primary" size="medium">
+												Imprimir receita
+												<Print />
+											</Button>
+										)}
+										content={() => printRef.current}
+									/>
+								</Box>
+							</Grid>
+						</Grid>
+						<Box
+							display="none"
+							displayPrint="flex"
+							justifyContent="center"
+							alignItems="center"
+							margin="40px"
+						>
+							<img src={Logo} style={{ width: "90px" }} />
+							<Box display="flex" flexDirection="column" marginLeft="20px">
+								<Typography variant="h3" component="h3">
+									Osíris
+								</Typography>
+								<Typography variant="h6" component="h6">
+									Controle local de fármacos
+								</Typography>
+							</Box>
+						</Box>
 						<Grid item>
 							<Box display="flex">
 								<Box>
@@ -50,8 +142,7 @@ function CreatePrescription() {
 										id="date"
 										label="Data"
 										style={{ margin: 8 }}
-										type="date"
-										defaultValue="2021-01-01"
+										value={prescription.formatedDate}
 										InputLabelProps={{
 											shrink: true,
 										}}
@@ -62,6 +153,7 @@ function CreatePrescription() {
 										label="Nome do paciente"
 										style={{ margin: 8 }}
 										placeholder="Nome do paciente"
+										value={prescription.pacient}
 										margin="normal"
 										fullWidth
 										InputLabelProps={{
@@ -74,8 +166,7 @@ function CreatePrescription() {
 						<Grid item>
 							<TextField
 								label="Médico"
-								defaultValue="Dr(a) Márcio Tanure"
-								disabled
+								value={prescription.name}
 								style={{ margin: 8 }}
 								margin="normal"
 								fullWidth
@@ -85,27 +176,10 @@ function CreatePrescription() {
 							/>
 						</Grid>
 						<Grid item>
-							<Autocomplete
-								freeSolo
-								id="free-solo-2-demo"
-								disableClearable
-								options={autocompleteop.map((option) => option)}
-								renderInput={(params) => (
-									<TextField
-										{...params}
-										label="Pesquise por um medicamento"
-										margin="normal"
-										variant="outlined"
-										size="small"
-										InputProps={{ ...params.InputProps, type: "search" }}
-									/>
-								)}
-							/>
-
 							<TableContainer>
 								<Table stickyHeader aria-label="sticky table">
 									<TableBody>
-										{rows.map((row) => {
+										{prescription.medicines.map((row) => {
 											return (
 												<TableRow
 													hover
@@ -113,50 +187,11 @@ function CreatePrescription() {
 													tabIndex={-1}
 													key={row.id}
 												>
-													<TableCell align="center">{row.medicine}</TableCell>
+													<TableCell align="center">{row.name}</TableCell>
+													<TableCell style={{ width: "40%" }}>
+														<Box style={{ borderBottom: "1px dashed #333" }} />
+													</TableCell>
 													<TableCell>{row.dosage}</TableCell>
-													<TableCell align="center">
-														{row.amount > 300 ? (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#11871D",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														) : row.amount > 100 ? (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#FF9F1C",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														) : (
-															<Box
-																component="span"
-																p={1}
-																borderRadius="2px"
-																style={{
-																	backgroundColor: "#BB0000",
-																	color: "white",
-																}}
-															>
-																{row.amount} unidades disponíveis
-															</Box>
-														)}
-													</TableCell>
-													<TableCell align="center">
-														<Delete />
-													</TableCell>
 												</TableRow>
 											);
 										})}
@@ -165,22 +200,31 @@ function CreatePrescription() {
 							</TableContainer>
 						</Grid>
 						<Grid item>
-							<Box mt="5px" alignSelf="right">
-								<Button
-									variant="contained"
-									color="primary"
-									fullWidth
-									size="large"
-								>
-									Criar receita
-								</Button>
+							<Box
+								mt="80px"
+								display="flex"
+								alignItems="center"
+								justifyContent="center"
+								flexDirection="column"
+							>
+								<Box width="50%" borderBottom={1} />
+								<Typography variant="subtitle1">Assinatura</Typography>
 							</Box>
 						</Grid>
-					</Grid>
-				</Box>
-			</Paper>
+					</Box>
+					<Snackbar
+						open={alertOpen}
+						autoHideDuration={6000}
+						onClose={handleAlertClose}
+					>
+						<Alert onClose={handleAlertClose} severity="success">
+							Receita finalizada
+						</Alert>
+					</Snackbar>
+				</Paper>
+			)}
 		</Container>
 	);
 }
 
-export default CreatePrescription;
+export default ShowPrescription;
