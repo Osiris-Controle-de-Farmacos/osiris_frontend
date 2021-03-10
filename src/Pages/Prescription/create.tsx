@@ -76,8 +76,10 @@ function CreatePrescription() {
 	}
 
 	function openDosageModal(medicine: Medicine) {
-		setAutocompleteMedicine(medicine);
-		setOpen(true);
+		if (medicine !== null) {
+			setAutocompleteMedicine(medicine);
+			setOpen(true);
+		}
 	}
 
 	function removeMedicine(id: number) {

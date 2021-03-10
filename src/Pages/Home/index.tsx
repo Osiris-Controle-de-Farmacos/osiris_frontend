@@ -13,7 +13,7 @@ function Home() {
 			<Box width="480px">
 				<Box display="flex" justifyContent="center" marginBottom="40px">
 					<Typography variant="h5" component="h1">
-						Bem vindo general tamo junto
+						Bem vindo
 					</Typography>
 				</Box>
 				<Box
