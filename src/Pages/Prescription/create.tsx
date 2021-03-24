@@ -84,7 +84,7 @@ function CreatePrescription() {
 
 	function removeMedicine(id: number) {
 		setMedicines({
-			list: medicines.list.filter((medicine) => medicine.id != id),
+			list: medicines.list.filter((medicine) => medicine.id !== id),
 		});
 	}
 
@@ -149,7 +149,7 @@ function CreatePrescription() {
 						<Grid item>
 							<TextField
 								label="Médico"
-								defaultValue="Dr(a) Márcio Tanure"
+								defaultValue="Dr(a) Mateus Santos Costa"
 								disabled
 								style={{ margin: 8 }}
 								margin="normal"

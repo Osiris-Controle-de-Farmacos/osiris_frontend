@@ -81,7 +81,7 @@ function ShowPrescription() {
 			response.data.formatedDate = ddmmyyyyDate;
 			setPrescription(response.data);
 		});
-	}, []);
+	}, [id]);
 
 	return (
 		<Container maxWidth="lg">
@@ -125,7 +125,7 @@ function ShowPrescription() {
 							alignItems="center"
 							margin="40px"
 						>
-							<img src={Logo} style={{ width: "90px" }} />
+							<img src={Logo} style={{ width: "90px" }} alt="" />
 							<Box display="flex" flexDirection="column" marginLeft="20px">
 								<Typography variant="h3" component="h3">
 									Osíris

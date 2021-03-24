@@ -19,7 +19,7 @@ function Header() {
 					alignItems="center"
 					margin="40px"
 				>
-					<img src={Logo} />
+					<img src={Logo} alt="" />
 					<Box display="flex" flexDirection="column" marginLeft="20px">
 						<Typography variant="h3" component="h3">
 							Osíris

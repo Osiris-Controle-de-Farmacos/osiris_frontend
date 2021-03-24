@@ -53,7 +53,7 @@ function MedicineModal(props: MedicineModalProps) {
 			setMedicine(response.data.name);
 			setAmount(response.data.amount);
 		});
-	}, []);
+	}, [props.id]);
 
 	return (
 		<Paper>
