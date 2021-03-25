@@ -195,7 +195,7 @@ function Prescriptions() {
 														alignItems="center"
 														justifyContent="center"
 													>
-														{prescription.status === 0 ? (
+														{prescription.status == 0 ? (
 															<Box
 																display="block"
 																minWidth="180px"
@@ -209,7 +209,7 @@ function Prescriptions() {
 															>
 																Aguardando retirada
 															</Box>
-														) : prescription.status === 1 ? (
+														) : prescription.status == 1 ? (
 															<Box
 																display="block"
 																minWidth="180px"
