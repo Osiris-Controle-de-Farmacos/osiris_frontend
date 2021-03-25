@@ -54,7 +54,7 @@ function CreatePrescription() {
 	const [date, setDate] = useState(() => {
 		const currentDate = new Date();
 		const parsedDate = `${currentDate.getFullYear()}-${String(
-			currentDate.getMonth()
+			currentDate.getMonth() + 1
 		).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`;
 		return parsedDate;
 	});
@@ -82,13 +82,13 @@ function CreatePrescription() {
 		}
 	}
 
-	function removeMedicine(id: number) {
+	function removePrescription(id: number) {
 		setMedicines({
 			list: medicines.list.filter((medicine) => medicine.id !== id),
 		});
 	}
 
-	function createMedicine() {
+	function handleCreatePresctiption() {
 		const body = {
 			prescription: {
 				date: date,
@@ -250,7 +250,7 @@ function CreatePrescription() {
 													</TableCell>
 													<TableCell align="center">
 														<IconButton>
-															<Delete onClick={() => removeMedicine(row.id)} />
+															<Delete onClick={() => removePrescription(row.id)} />
 														</IconButton>
 													</TableCell>
 												</TableRow>
@@ -267,7 +267,7 @@ function CreatePrescription() {
 									color="primary"
 									fullWidth
 									size="large"
-									onClick={createMedicine}
+									onClick={handleCreatePresctiption}
 								>
 									Criar receita
 								</Button>
